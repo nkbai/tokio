@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["TrySendError","This enumeration is the list of the possible error outcomes for the try_send method."]],"struct":[["ClosedError","Erorr returned by `Sender::poll_ready`]."],["RecvError","Error returned by `Receiver`."],["SendError","Error returned by the `Sender`."]]});

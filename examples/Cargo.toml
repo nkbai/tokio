@@ -50,3 +50,6 @@ path = "udp-client.rs"
 [[example]]
 name = "udp-codec"
 path = "udp-codec.rs"
+[[example]]
+name = "tinyhttp"
+path = "tinyhttp.rs"

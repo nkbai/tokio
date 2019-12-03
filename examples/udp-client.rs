@@ -35,9 +35,9 @@ use std::net::SocketAddr;
 use tokio::net::UdpSocket;
 
 fn get_stdin_data() -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    let mut buf = Vec::new();
-    stdin().read_to_end(&mut buf)?;
-    Ok(buf)
+    let mut buf = String::new();
+    stdin().read_line(&mut buf)?;
+    Ok(buf.into_bytes())
 }
 
 #[tokio::main]

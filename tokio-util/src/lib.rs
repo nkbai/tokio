@@ -17,10 +17,15 @@
 #[macro_use]
 mod cfg;
 
-cfg_codec! {
-    pub mod codec;
-}
-
-cfg_udp! {
-    pub mod udp;
-}
+//cfg_codec! {
+//    pub mod codec;
+//}
+#[cfg(feature = "codec")]
+#[cfg_attr(docsrs, doc(cfg(feature = "codec")))]
+pub mod codec;
+//cfg_udp! {
+//    pub mod udp;
+//}
+#[cfg(all(feature = "udp", feature = "codec"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "udp", feature = "codec"))))]
+pub mod udp;

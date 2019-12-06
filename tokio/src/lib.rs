@@ -216,10 +216,9 @@
 #[macro_use]
 mod macros;
 
-cfg_fs! {
-    pub mod fs;
-}
-
+#[cfg(feature = "fs")]
+#[cfg_attr(docsrs, doc(cfg(feature = "fs")))]
+pub mod fs;
 mod future;
 
 pub mod io;

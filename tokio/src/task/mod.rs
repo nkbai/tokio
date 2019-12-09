@@ -207,108 +207,145 @@
 //! [rt-threaded]: ../runtime/index.html#threaded-scheduler
 //! [`task::yield_now`]: crate::task::yield_now()
 //! [`thread::yield_now`]: std::thread::yield_now
-cfg_blocking! {
-    mod blocking;
-    pub use blocking::spawn_blocking;
+#[cfg(feature = "blocking")]
+#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
+mod blocking;
+#[cfg(feature = "blocking")]
+#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
+#[cfg(feature = "rt-threaded")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
+pub use blocking::block_in_place;
+#[cfg(feature = "blocking")]
+#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
+pub use blocking::spawn_blocking;
 
-    cfg_rt_threaded! {
-        pub use blocking::block_in_place;
-    }
+#[cfg(feature = "rt-core")]
+mod core;
+#[cfg(feature = "rt-core")]
+use self::core::Cell;
+#[cfg(feature = "rt-core")]
+pub(crate) use self::core::Header;
+#[cfg(feature = "rt-core")]
+mod error;
+#[cfg(feature = "rt-core")]
+pub use self::error::JoinError;
+#[cfg(feature = "rt-core")]
+mod harness;
+#[cfg(feature = "rt-core")]
+use self::harness::Harness;
+#[cfg(feature = "rt-core")]
+mod join;
+#[cfg(feature = "rt-core")]
+#[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
+pub use self::join::JoinHandle;
+#[cfg(feature = "rt-core")]
+mod list;
+#[cfg(feature = "rt-core")]
+pub(crate) use self::list::OwnedList;
+#[cfg(feature = "rt-core")]
+mod raw;
+#[cfg(feature = "rt-core")]
+use self::raw::RawTask;
+#[cfg(feature = "rt-core")]
+mod spawn;
+#[cfg(feature = "rt-core")]
+pub use spawn::spawn;
+#[cfg(feature = "rt-core")]
+mod stack;
+#[cfg(feature = "rt-core")]
+pub(crate) use self::stack::TransferStack;
+#[cfg(feature = "rt-core")]
+mod state;
+#[cfg(feature = "rt-core")]
+use self::state::{Snapshot, State};
+#[cfg(feature = "rt-core")]
+mod waker;
+#[cfg(feature = "rt-core")]
+mod yield_now;
+#[cfg(feature = "rt-core")]
+pub use yield_now::yield_now;
+
+#[cfg(feature = "rt-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-util")))]
+mod local;
+#[cfg(feature = "rt-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-util")))]
+pub use local::{spawn_local, LocalSet};
+
+#[cfg(feature = "rt-core")]
+#[doc = r###"Unit tests"###]
+#[cfg(test)]
+mod tests;
+#[cfg(feature = "rt-core")]
+use std::future::Future;
+#[cfg(feature = "rt-core")]
+use std::marker::PhantomData;
+#[cfg(feature = "rt-core")]
+use std::ptr::NonNull;
+#[cfg(feature = "rt-core")]
+use std::{fmt, mem};
+#[cfg(feature = "rt-core")]
+#[doc = r###"An owned handle to the task, tracked by ref count"###]
+pub(crate) struct Task<S: 'static> {
+    raw: RawTask,
+    _p: PhantomData<S>,
 }
+#[cfg(feature = "rt-core")]
+unsafe impl<S: ScheduleSendOnly + 'static> Send for Task<S> {}
+#[cfg(feature = "rt-core")]
+#[doc = r###"Task result sent back"###]
+pub(crate) type Result<T> = std::result::Result<T, JoinError>;
+#[cfg(feature = "rt-core")]
+pub(crate) trait Schedule: Sized + 'static {
+    #[doc = r###"Bind a task to the executor.
 
-cfg_rt_core! {
-    mod core;
-    use self::core::Cell;
-    pub(crate) use self::core::Header;
+Guaranteed to be called from the thread that called `poll` on the task."###]
+    fn bind(&self, task: &Task<Self>);
 
-    mod error;
-    pub use self::error::JoinError;
+    #[doc = r###"The task has completed work and is ready to be released. The scheduler
+is free to drop it whenever."###]
+    fn release(&self, task: Task<Self>);
 
-    mod harness;
-    use self::harness::Harness;
+    #[doc = r###"The has been completed by the executor it was bound to."###]
+    fn release_local(&self, task: &Task<Self>);
 
-    mod join;
-    #[allow(unreachable_pub)] // https://github.com/rust-lang/rust/issues/57411
-    pub use self::join::JoinHandle;
-
-    mod list;
-    pub(crate) use self::list::OwnedList;
-
-    mod raw;
-    use self::raw::RawTask;
-
-    mod spawn;
-    pub use spawn::spawn;
-
-    mod stack;
-    pub(crate) use self::stack::TransferStack;
-
-    mod state;
-    use self::state::{Snapshot, State};
-
-    mod waker;
-
-    mod yield_now;
-    pub use yield_now::yield_now;
+    #[doc = r###"Schedule the task"###]
+    fn schedule(&self, task: Task<Self>);
 }
+#[cfg(feature = "rt-core")]
+#[doc = r###"Marker trait indicating that a scheduler can only schedule tasks which
+implement `Send`.
 
+Schedulers that implement this trait may not schedule `!Send` futures. If
+trait is implemented, the corresponding `Task` type will implement `Send`."###]
+pub(crate) trait ScheduleSendOnly: Schedule + Send + Sync {}
+#[cfg(feature = "rt-core")]
+#[doc = r###"Create a new task with an associated join handle"###]
+pub(crate) fn joinable<T, S>(task: T) -> (Task<S>, JoinHandle<T::Output>)
+where
+    T: Future + Send + 'static,
+    S: ScheduleSendOnly,
+{
+    let raw = RawTask::new_joinable::<_, S>(task);
+
+    let task = Task {
+        raw,
+        _p: PhantomData,
+    };
+
+    let join = JoinHandle::new(raw);
+
+    (task, join)
+}
+#[cfg(feature = "rt-core")]
 cfg_rt_util! {
-    mod local;
-    pub use local::{spawn_local, LocalSet};
-}
-
-cfg_rt_core! {
-    /// Unit tests
-    #[cfg(test)]
-    mod tests;
-
-    use std::future::Future;
-    use std::marker::PhantomData;
-    use std::ptr::NonNull;
-    use std::{fmt, mem};
-
-    /// An owned handle to the task, tracked by ref count
-    pub(crate) struct Task<S: 'static> {
-        raw: RawTask,
-        _p: PhantomData<S>,
-    }
-
-    unsafe impl<S: ScheduleSendOnly + 'static> Send for Task<S> {}
-
-    /// Task result sent back
-    pub(crate) type Result<T> = std::result::Result<T, JoinError>;
-
-    pub(crate) trait Schedule: Sized + 'static {
-        /// Bind a task to the executor.
-        ///
-        /// Guaranteed to be called from the thread that called `poll` on the task.
-        fn bind(&self, task: &Task<Self>);
-
-        /// The task has completed work and is ready to be released. The scheduler
-        /// is free to drop it whenever.
-        fn release(&self, task: Task<Self>);
-
-        /// The has been completed by the executor it was bound to.
-        fn release_local(&self, task: &Task<Self>);
-
-        /// Schedule the task
-        fn schedule(&self, task: Task<Self>);
-    }
-
-    /// Marker trait indicating that a scheduler can only schedule tasks which
-    /// implement `Send`.
-    ///
-    /// Schedulers that implement this trait may not schedule `!Send` futures. If
-    /// trait is implemented, the corresponding `Task` type will implement `Send`.
-    pub(crate) trait ScheduleSendOnly: Schedule + Send + Sync {}
-
-    /// Create a new task with an associated join handle
-    pub(crate) fn joinable<T, S>(task: T) -> (Task<S>, JoinHandle<T::Output>)
+    #[doc=r###"Create a new `!Send` task with an associated join handle"###]
+    pub(crate) fn joinable_local<T, S>(task: T) -> (Task<S>, JoinHandle<T::Output>)
     where
-        T: Future + Send + 'static,
-        S: ScheduleSendOnly,
+        T: Future + 'static,
+        S: Schedule,
     {
-        let raw = RawTask::new_joinable::<_, S>(task);
+        let raw = RawTask::new_joinable_local::<_, S>(task);
 
         let task = Task {
             raw,
@@ -319,81 +356,61 @@ cfg_rt_core! {
 
         (task, join)
     }
-
-    cfg_rt_util! {
-        /// Create a new `!Send` task with an associated join handle
-        pub(crate) fn joinable_local<T, S>(task: T) -> (Task<S>, JoinHandle<T::Output>)
-        where
-            T: Future + 'static,
-            S: Schedule,
-        {
-            let raw = RawTask::new_joinable_local::<_, S>(task);
-
-            let task = Task {
-                raw,
-                _p: PhantomData,
-            };
-
-            let join = JoinHandle::new(raw);
-
-            (task, join)
+}
+#[cfg(feature = "rt-core")]
+impl<S: 'static> Task<S> {
+    pub(crate) unsafe fn from_raw(ptr: NonNull<Header>) -> Task<S> {
+        Task {
+            raw: RawTask::from_raw(ptr),
+            _p: PhantomData,
         }
     }
 
-    impl<S: 'static> Task<S> {
-        pub(crate) unsafe fn from_raw(ptr: NonNull<Header>) -> Task<S> {
-            Task {
-                raw: RawTask::from_raw(ptr),
-                _p: PhantomData,
-            }
-        }
+    pub(crate) fn header(&self) -> &Header {
+        self.raw.header()
+    }
 
-        pub(crate) fn header(&self) -> &Header {
-            self.raw.header()
-        }
-
-        pub(crate) fn into_raw(self) -> NonNull<Header> {
-            let raw = self.raw.into_raw();
+    pub(crate) fn into_raw(self) -> NonNull<Header> {
+        let raw = self.raw.into_raw();
+        mem::forget(self);
+        raw
+    }
+}
+#[cfg(feature = "rt-core")]
+impl<S: Schedule> Task<S> {
+    #[doc = r###"Returns `self` when the task needs to be immediately re-scheduled"###]
+    pub(crate) fn run<F>(self, mut executor: F) -> Option<Self>
+    where
+        F: FnMut() -> Option<NonNull<S>>,
+    {
+        if unsafe {
+            self.raw
+                .poll(&mut || executor().map(|ptr| ptr.cast::<()>()))
+        } {
+            Some(self)
+        } else {
+            // Cleaning up the `Task` instance is done from within the poll
+            // function.
             mem::forget(self);
-            raw
+            None
         }
     }
 
-    impl<S: Schedule> Task<S> {
-        /// Returns `self` when the task needs to be immediately re-scheduled
-        pub(crate) fn run<F>(self, mut executor: F) -> Option<Self>
-        where
-            F: FnMut() -> Option<NonNull<S>>,
-        {
-            if unsafe {
-                self.raw
-                    .poll(&mut || executor().map(|ptr| ptr.cast::<()>()))
-            } {
-                Some(self)
-            } else {
-                // Cleaning up the `Task` instance is done from within the poll
-                // function.
-                mem::forget(self);
-                None
-            }
-        }
-
-        /// Pre-emptively cancel the task as part of the shutdown process.
-        pub(crate) fn shutdown(self) {
-            self.raw.cancel_from_queue();
-            mem::forget(self);
-        }
+    #[doc = r###"Pre-emptively cancel the task as part of the shutdown process."###]
+    pub(crate) fn shutdown(self) {
+        self.raw.cancel_from_queue();
+        mem::forget(self);
     }
-
-    impl<S: 'static> Drop for Task<S> {
-        fn drop(&mut self) {
-            self.raw.drop_task();
-        }
+}
+#[cfg(feature = "rt-core")]
+impl<S: 'static> Drop for Task<S> {
+    fn drop(&mut self) {
+        self.raw.drop_task();
     }
-
-    impl<S> fmt::Debug for Task<S> {
-        fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-            fmt.debug_struct("Task").finish()
-        }
+}
+#[cfg(feature = "rt-core")]
+impl<S> fmt::Debug for Task<S> {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt.debug_struct("Task").finish()
     }
 }

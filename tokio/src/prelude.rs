@@ -15,7 +15,7 @@
 
 pub use crate::io::{self, AsyncBufRead, AsyncRead, AsyncWrite};
 
-cfg_io_util! {
-    #[doc(no_inline)]
-    pub use crate::io::{AsyncBufReadExt as _, AsyncReadExt as _, AsyncWriteExt as _};
-}
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+#[doc(no_inline)]
+pub use crate::io::{AsyncBufReadExt as _, AsyncReadExt as _, AsyncWriteExt as _};

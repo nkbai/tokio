@@ -38,6 +38,10 @@
       <sourceFolder url="file://$MODULE_DIR$/githubdns/examples" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/githubdns/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/githubdns/benches" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tokio-tls/examples/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tokio-tls/examples/examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tokio-tls/examples/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/tokio-tls/examples/benches" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/examples/target" />
       <excludeFolder url="file://$MODULE_DIR$/githubdns/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
@@ -45,6 +49,7 @@
       <excludeFolder url="file://$MODULE_DIR$/tests-integration/target" />
       <excludeFolder url="file://$MODULE_DIR$/tokio-macros/target" />
       <excludeFolder url="file://$MODULE_DIR$/tokio-test/target" />
+      <excludeFolder url="file://$MODULE_DIR$/tokio-tls/examples/target" />
       <excludeFolder url="file://$MODULE_DIR$/tokio-tls/target" />
       <excludeFolder url="file://$MODULE_DIR$/tokio-util/target" />
       <excludeFolder url="file://$MODULE_DIR$/tokio/target" />

@@ -11,5 +11,6 @@ members = [
   "examples",
   "tests-build",
   "tests-integration",
-  "githubdns"
+  "githubdns",
+  "tokio-tls/examples"
 ]

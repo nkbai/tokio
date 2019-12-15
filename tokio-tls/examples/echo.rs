@@ -7,6 +7,7 @@ use tokio;
 use tokio::net::TcpListener;
 use tokio_tls;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
 /**
 an example to setup a tls server.
 how to test:
@@ -25,9 +26,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tokio_tls::TlsAcceptor::from(native_tls::TlsAcceptor::builder(cert).build()?);
     loop {
         // Asynchronously wait for an inbound socket.
-        let (  socket, remote_addr) = tcp.accept().await?;
-        let tls_acceptor=tls_acceptor.clone();
-        println!("accept connection from {}",remote_addr);
+        let (socket, remote_addr) = tcp.accept().await?;
+        let tls_acceptor = tls_acceptor.clone();
+        println!("accept connection from {}", remote_addr);
+
         tokio::spawn(async move {
             // Accept the TLS connection.
             let mut tls_stream = tls_acceptor

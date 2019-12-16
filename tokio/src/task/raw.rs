@@ -1,5 +1,5 @@
 use crate::loom::alloc::Track;
-use crate::task::Cell;
+use crate::task::core::Cell;
 use crate::task::Harness;
 use crate::task::{Header, Schedule, ScheduleSendOnly};
 use crate::task::{Snapshot, State};

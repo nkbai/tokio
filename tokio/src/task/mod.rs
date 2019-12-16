@@ -243,8 +243,10 @@ pub(crate) use self::list::OwnedList;
 pub(crate) mod queue;
 #[cfg(feature = "rt-core")]
 mod raw;
+
 #[cfg(feature = "rt-core")]
 use self::raw::RawTask;
+
 #[cfg(feature = "rt-core")]
 mod spawn;
 #[cfg(feature = "rt-core")]

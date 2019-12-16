@@ -16,39 +16,41 @@ use std::sync::atomic::Ordering::{Acquire, Release};
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-cfg_io_util! {
-    /// The readable half of a value returned from `split`.
-    pub struct ReadHalf<T> {
-        inner: Arc<Inner<T>>,
-    }
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+#[doc = r###"The readable half of a value returned from `split`."###]
+pub struct ReadHalf<T> {
+    inner: Arc<Inner<T>>,
+}
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+#[doc = r###"The writable half of a value returned from `split`."###]
+pub struct WriteHalf<T> {
+    inner: Arc<Inner<T>>,
+}
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+#[doc = r###"Split a single value implementing `AsyncRead + AsyncWrite` into separate
+`AsyncRead` and `AsyncWrite` handles.
 
-    /// The writable half of a value returned from `split`.
-    pub struct WriteHalf<T> {
-        inner: Arc<Inner<T>>,
-    }
+To restore this read/write object from its `split::ReadHalf` and
+`split::WriteHalf` use `unsplit`."###]
+pub fn split<T>(stream: T) -> (ReadHalf<T>, WriteHalf<T>)
+where
+    T: AsyncRead + AsyncWrite,
+{
+    let inner = Arc::new(Inner {
+        locked: AtomicBool::new(false),
+        stream: UnsafeCell::new(stream),
+    });
 
-    /// Split a single value implementing `AsyncRead + AsyncWrite` into separate
-    /// `AsyncRead` and `AsyncWrite` handles.
-    ///
-    /// To restore this read/write object from its `split::ReadHalf` and
-    /// `split::WriteHalf` use `unsplit`.
-    pub fn split<T>(stream: T) -> (ReadHalf<T>, WriteHalf<T>)
-    where
-        T: AsyncRead + AsyncWrite,
-    {
-        let inner = Arc::new(Inner {
-            locked: AtomicBool::new(false),
-            stream: UnsafeCell::new(stream),
-        });
+    let rd = ReadHalf {
+        inner: inner.clone(),
+    };
 
-        let rd = ReadHalf {
-            inner: inner.clone(),
-        };
+    let wr = WriteHalf { inner };
 
-        let wr = WriteHalf { inner };
-
-        (rd, wr)
-    }
+    (rd, wr)
 }
 
 struct Inner<T> {

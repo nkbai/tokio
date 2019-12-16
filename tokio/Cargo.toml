@@ -40,7 +40,9 @@ default = [  "blocking",
              "signal",
              "stream",
              "sync",
-             "time",]
+             "time",
+               "test-util",
+               ]
 
 # enable everything
 full = [

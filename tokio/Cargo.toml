@@ -24,8 +24,23 @@ categories = ["asynchronous", "network-programming"]
 keywords = ["io", "async", "non-blocking", "futures"]
 
 [features]
-# Include nothing by default
-default = []
+# Include nothing by default,纯粹是为了我自己测试方便,否则default应该是空
+default = [  "blocking",
+             "dns",
+             "fs",
+             "io-driver",
+             "io-util",
+             "io-std",
+             "macros",
+             "net",
+             "process",
+             "rt-core",
+             "rt-util",
+             "rt-threaded",
+             "signal",
+             "stream",
+             "sync",
+             "time",]
 
 # enable everything
 full = [
@@ -45,6 +60,7 @@ full = [
   "stream",
   "sync",
   "time",
+  "test-util"
 ]
 
 blocking = ["rt-core"]

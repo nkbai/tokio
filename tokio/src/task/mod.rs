@@ -207,17 +207,14 @@
 //! [rt-threaded]: ../runtime/index.html#threaded-scheduler
 //! [`task::yield_now`]: crate::task::yield_now()
 //! [`thread::yield_now`]: std::thread::yield_now
-#[cfg(feature = "blocking")]
-#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
-mod blocking;
-#[cfg(feature = "blocking")]
-#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
-#[cfg(feature = "rt-threaded")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
-pub use blocking::block_in_place;
-#[cfg(feature = "blocking")]
-#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
-pub use blocking::spawn_blocking;
+cfg_blocking! {
+    mod blocking;
+    pub use blocking::spawn_blocking;
+
+    cfg_rt_threaded! {
+        pub use blocking::block_in_place;
+    }
+}
 
 #[cfg(feature = "rt-core")]
 mod core;
@@ -242,6 +239,8 @@ pub use self::join::JoinHandle;
 mod list;
 #[cfg(feature = "rt-core")]
 pub(crate) use self::list::OwnedList;
+#[cfg(feature = "rt-core")]
+pub(crate) mod queue;
 #[cfg(feature = "rt-core")]
 mod raw;
 #[cfg(feature = "rt-core")]
@@ -290,7 +289,6 @@ pub(crate) struct Task<S: 'static> {
     raw: RawTask,
     _p: PhantomData<S>,
 }
-
 #[cfg(feature = "rt-core")]
 unsafe impl<S: ScheduleSendOnly + 'static> Send for Task<S> {}
 #[cfg(feature = "rt-core")]

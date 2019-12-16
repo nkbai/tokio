@@ -217,9 +217,9 @@
 #[macro_use]
 mod macros;
 
-#[cfg(feature = "fs")]
-#[cfg_attr(docsrs, doc(cfg(feature = "fs")))]
-pub mod fs;
+cfg_fs! {
+    pub mod fs;
+}
 
 mod future;
 
@@ -231,44 +231,39 @@ mod park;
 
 pub mod prelude;
 
-#[cfg(feature = "process")]
-#[cfg_attr(docsrs, doc(cfg(feature = "process")))]
-#[cfg(not(loom))]
-pub mod process;
+cfg_process! {
+    pub mod process;
+}
 
 pub mod runtime;
 
-#[cfg(feature = "signal")]
-#[cfg_attr(docsrs, doc(cfg(feature = "signal")))]
-#[cfg(not(loom))]
-pub mod signal;
+cfg_signal! {
+    pub mod signal;
+}
 
-#[cfg(feature = "sync")]
-#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
-pub mod sync;
-
-#[cfg(not(feature = "sync"))]
-mod sync;
+cfg_sync! {
+    pub mod sync;
+}
+cfg_not_sync! {
+    mod sync;
+}
 
 #[cfg(feature = "rt-core")]
 pub mod task;
 #[cfg(feature = "rt-core")]
 pub use task::spawn;
 
-#[cfg(feature = "time")]
-#[cfg_attr(docsrs, doc(cfg(feature = "time")))]
-pub mod time;
+cfg_time! {
+    pub mod time;
+}
+
 mod util;
 
-#[cfg(feature = "macros")]
-#[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
-#[doc(inline)]
-#[cfg(not(test))] // Work around for rust-lang/rust#62127
-pub use tokio_macros::main;
-#[cfg(feature = "macros")]
-#[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
-#[doc(inline)]
-pub use tokio_macros::test;
+cfg_macros! {
+    #[cfg(not(test))] // Work around for rust-lang/rust#62127
+    pub use tokio_macros::main;
+    pub use tokio_macros::test;
+}
 
 // Tests
 #[cfg(test)]

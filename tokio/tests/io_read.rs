@@ -7,6 +7,8 @@ use tokio_test::assert_ok;
 use std::io;
 use std::pin::Pin;
 use std::task::{Context, Poll};
+#[test]
+fn test() {}
 
 #[tokio::test]
 async fn read() {

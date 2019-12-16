@@ -290,7 +290,10 @@ impl AsyncRead for Mock {
     ) -> Poll<io::Result<usize>> {
         loop {
             if let Some(ref mut sleep) = self.inner.sleep {
-                ready!(Pin::new(sleep).poll(cx));
+                match (Pin::new(sleep).poll(cx)) {
+                    task::Poll::Ready(t) => t,
+                    task::Poll::Pending => return task::Poll::Pending,
+                }
             }
 
             // If a sleep is set, it has already fired

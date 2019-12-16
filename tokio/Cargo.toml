@@ -60,7 +60,7 @@ full = [
   "stream",
   "sync",
   "time",
-  "test-util"
+  "test-util",
 ]
 
 blocking = ["rt-core"]

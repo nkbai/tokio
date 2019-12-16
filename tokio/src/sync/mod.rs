@@ -5,7 +5,7 @@
 //! This module is enabled with the **`sync`** feature flag.
 //!
 //! Tasks sometimes need to communicate with each other. This module contains
-//! two basic abstractions for doing so:
+//! basic abstractions for doing so:
 //!
 //! - [oneshot](oneshot/index.html), a way of sending a single value
 //!   from one task to another.
@@ -15,24 +15,36 @@
 //! - [watch](watch/index.html), a single-producer, multi-consumer channel that
 //!   only stores the **most recently** sent value.
 
-cfg_sync! {
-    mod barrier;
-    pub use barrier::{Barrier, BarrierWaitResult};
-
-    pub mod mpsc;
-
-    mod mutex;
-    pub use mutex::{Mutex, MutexGuard};
-
-    pub mod oneshot;
-
-    pub(crate) mod semaphore;
-
-    mod task;
-    pub(crate) use task::AtomicWaker;
-
-    pub mod watch;
-}
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+mod barrier;
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub use barrier::{Barrier, BarrierWaitResult};
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub mod mpsc;
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+mod mutex;
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub use mutex::{Mutex, MutexGuard};
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub mod oneshot;
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub(crate) mod semaphore;
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+mod task;
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub(crate) use task::AtomicWaker;
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub mod watch;
 
 cfg_not_sync! {
     cfg_atomic_waker_impl! {

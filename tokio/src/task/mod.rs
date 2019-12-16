@@ -4,7 +4,7 @@
 //!
 //! A _task_ is a light weight, non-blocking unit of execution. A task is similar
 //! to an OS thread, but rather than being managed by the OS scheduler, they are
-//! managed by the [Tokio runtime][rt]. Another name for this general patterh is
+//! managed by the [Tokio runtime][rt]. Another name for this general pattern is
 //! [green threads]. If you are familiar with [Go's goroutines], [Kotlin's
 //! coroutines], or [Erlang's processes], you can think of Tokio's tasks as
 //! something similar.
@@ -290,6 +290,7 @@ pub(crate) struct Task<S: 'static> {
     raw: RawTask,
     _p: PhantomData<S>,
 }
+
 #[cfg(feature = "rt-core")]
 unsafe impl<S: ScheduleSendOnly + 'static> Send for Task<S> {}
 #[cfg(feature = "rt-core")]

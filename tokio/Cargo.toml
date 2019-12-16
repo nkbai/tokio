@@ -45,6 +45,7 @@ full = [
   "stream",
   "sync",
   "time",
+  "test-util",
 ]
 
 blocking = ["rt-core"]

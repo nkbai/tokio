@@ -191,23 +191,32 @@ cfg_io_std! {
     pub use stdout::{stdout, Stdout};
 }
 
-cfg_io_util! {
-    mod split;
-    pub use split::{split, ReadHalf, WriteHalf};
-
-    pub(crate) mod seek;
-    pub use self::seek::Seek;
-
-    pub(crate) mod util;
-    pub use util::{
-        copy, empty, repeat, sink, AsyncBufReadExt, AsyncReadExt, AsyncSeekExt, AsyncWriteExt, BufReader,
-        BufStream, BufWriter, Copy, Empty, Lines, Repeat, Sink, Split, Take,
-    };
-
-    // Re-export io::Error so that users don't have to deal with conflicts when
-    // `use`ing `tokio::io` and `std::io`.
-    pub use std::io::{Error, ErrorKind, Result};
-}
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+mod split;
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+pub use split::{split, ReadHalf, WriteHalf};
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+pub(crate) mod seek;
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+pub use self::seek::Seek;
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+pub(crate) mod util;
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+pub use util::{
+    copy, empty, repeat, sink, AsyncBufReadExt, AsyncReadExt, AsyncSeekExt, AsyncWriteExt,
+    BufReader, BufStream, BufWriter, Copy, Empty, Lines, Repeat, Sink, Split, Take,
+};
+// Re-export io::Error so that users don't have to deal with conflicts when
+// `use`ing `tokio::io` and `std::io`.
+#[cfg(feature = "io-util")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
+pub use std::io::{Error, ErrorKind, Result};
 
 cfg_not_io_util! {
     cfg_process! {

@@ -192,17 +192,22 @@
 #[macro_use]
 mod tests;
 
-cfg_rt_core! {
-    mod basic_scheduler;
-    use basic_scheduler::BasicScheduler;
-}
+#[cfg(feature = "rt-core")]
+mod basic_scheduler;
+#[cfg(feature = "rt-core")]
+use basic_scheduler::BasicScheduler;
 
 mod blocking;
 use blocking::BlockingPool;
 
-cfg_blocking_impl! {
-    pub(crate) use blocking::spawn_blocking;
-}
+#[cfg(any(
+    feature = "blocking",
+    feature = "fs",
+    feature = "dns",
+    feature = "io-std",
+    feature = "rt-threaded",
+))]
+pub(crate) use blocking::spawn_blocking;
 
 mod builder;
 pub use self::builder::Builder;
@@ -210,20 +215,22 @@ pub use self::builder::Builder;
 pub(crate) mod enter;
 use self::enter::enter;
 
-cfg_rt_core! {
-    mod global;
-    pub(crate) use global::spawn;
-}
+#[cfg(feature = "rt-core")]
+mod global;
+#[cfg(feature = "rt-core")]
+pub(crate) use global::spawn;
 
 mod handle;
 pub use self::handle::Handle;
 
 mod io;
 
-cfg_rt_threaded! {
-    mod park;
-    use park::{Parker, Unparker};
-}
+#[cfg(feature = "rt-threaded")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
+mod park;
+#[cfg(feature = "rt-threaded")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
+use park::{Parker, Unparker};
 
 mod shell;
 use self::shell::Shell;
@@ -233,14 +240,15 @@ use self::spawner::Spawner;
 
 mod time;
 
-cfg_rt_threaded! {
-    pub(crate) mod thread_pool;
-    use self::thread_pool::ThreadPool;
-}
+#[cfg(feature = "rt-threaded")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
+pub(crate) mod thread_pool;
+#[cfg(feature = "rt-threaded")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
+use self::thread_pool::ThreadPool;
 
-cfg_rt_core! {
-    use crate::task::JoinHandle;
-}
+#[cfg(feature = "rt-core")]
+use crate::task::JoinHandle;
 
 use std::future::Future;
 

@@ -207,14 +207,17 @@
 //! [rt-threaded]: ../runtime/index.html#threaded-scheduler
 //! [`task::yield_now`]: crate::task::yield_now()
 //! [`thread::yield_now`]: std::thread::yield_now
-cfg_blocking! {
-    mod blocking;
-    pub use blocking::spawn_blocking;
-
-    cfg_rt_threaded! {
-        pub use blocking::block_in_place;
-    }
-}
+#[cfg(feature = "blocking")]
+#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
+mod blocking;
+#[cfg(feature = "blocking")]
+#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
+#[cfg(feature = "rt-threaded")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
+pub use blocking::block_in_place;
+#[cfg(feature = "blocking")]
+#[cfg_attr(docsrs, doc(cfg(feature = "blocking")))]
+pub use blocking::spawn_blocking;
 
 #[cfg(feature = "rt-core")]
 mod core;

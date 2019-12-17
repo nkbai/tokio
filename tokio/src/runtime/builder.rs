@@ -397,47 +397,47 @@ cfg_rt_core! {
     }
 }
 
-cfg_rt_threaded! {
-    impl Builder {
-        /// Use a multi-threaded scheduler for executing tasks.
-        pub fn threaded_scheduler(&mut self) -> &mut Self {
-            self.kind = Kind::ThreadPool;
-            self
-        }
+#[cfg(feature = "rt-threaded")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
+impl Builder {
+    #[doc = r###"Use a multi-threaded scheduler for executing tasks."###]
+    pub fn threaded_scheduler(&mut self) -> &mut Self {
+        self.kind = Kind::ThreadPool;
+        self
+    }
 
-        fn build_threaded_runtime(&mut self) -> io::Result<Runtime> {
-            use crate::runtime::{Kind, ThreadPool};
-            use crate::runtime::park::Parker;
+    fn build_threaded_runtime(&mut self) -> io::Result<Runtime> {
+        use crate::runtime::park::Parker;
+        use crate::runtime::{Kind, ThreadPool};
 
-            let clock = time::create_clock();
+        let clock = time::create_clock();
 
-            let (io_driver, io_handle) = io::create_driver(self.enable_io)?;
-            let (driver, time_handle) = time::create_driver(self.enable_time, io_driver, clock.clone());
-            let (scheduler, workers) = ThreadPool::new(self.num_threads, Parker::new(driver));
-            let spawner = Spawner::ThreadPool(scheduler.spawner().clone());
+        let (io_driver, io_handle) = io::create_driver(self.enable_io)?;
+        let (driver, time_handle) = time::create_driver(self.enable_time, io_driver, clock.clone());
+        let (scheduler, workers) = ThreadPool::new(self.num_threads, Parker::new(driver));
+        let spawner = Spawner::ThreadPool(scheduler.spawner().clone());
 
-            // Create the blocking pool
-            let blocking_pool = blocking::create_blocking_pool(self, &spawner, &io_handle, &time_handle, &clock);
-            let blocking_spawner = blocking_pool.spawner().clone();
+        // Create the blocking pool
+        let blocking_pool =
+            blocking::create_blocking_pool(self, &spawner, &io_handle, &time_handle, &clock);
+        let blocking_spawner = blocking_pool.spawner().clone();
 
-            // Spawn the thread pool workers
-            workers.spawn(&blocking_spawner);
+        // Spawn the thread pool workers
+        workers.spawn(&blocking_spawner);
 
-            Ok(Runtime {
-                kind: Kind::ThreadPool(scheduler),
-                handle: Handle {
-                    spawner,
-                    io_handle,
-                    time_handle,
-                    clock,
-                    blocking_spawner,
-                },
-                blocking_pool,
-            })
-        }
+        Ok(Runtime {
+            kind: Kind::ThreadPool(scheduler),
+            handle: Handle {
+                spawner,
+                io_handle,
+                time_handle,
+                clock,
+                blocking_spawner,
+            },
+            blocking_pool,
+        })
     }
 }
-
 impl Default for Builder {
     fn default() -> Self {
         Self::new()

@@ -110,7 +110,10 @@ impl<T: AsyncWrite> AsyncWrite for WriteHalf<T> {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<Result<usize, io::Error>> {
-        let mut inner = ready!(self.inner.poll_lock(cx));
+        let mut inner = match (self.inner.poll_lock(cx)) {
+            std::task::Poll::Ready(t) => t,
+            std::task::Poll::Pending => return std::task::Poll::Pending,
+        };
         inner.stream_pin().poll_write(cx, buf)
     }
 

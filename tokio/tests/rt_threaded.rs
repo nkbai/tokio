@@ -41,7 +41,7 @@ fn many_oneshot_futures() {
 
             rt.spawn(async move {
                 let num = cnt.fetch_add(1, Relaxed) + 1;
-
+                println!("current thread {:?}", std::thread::current().id());
                 if num == NUM {
                     tx.send(()).unwrap();
                 }
@@ -68,7 +68,7 @@ fn many_multishot_futures() {
         let mut final_rxs = Vec::with_capacity(TRACKS);
 
         for _ in 0..TRACKS {
-            let (start_tx, mut chain_rx) = mpsc::channel(10);
+            let (start_tx, mut chain_rx) = tokio::sync::mpsc::channel(10);
 
             for _ in 0..CHAIN {
                 let (mut next_tx, next_rx) = mpsc::channel(10);

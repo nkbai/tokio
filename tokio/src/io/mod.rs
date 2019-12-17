@@ -170,26 +170,40 @@ pub use self::async_seek::AsyncSeek;
 mod async_write;
 pub use self::async_write::AsyncWrite;
 
-cfg_io_driver! {
-    pub(crate) mod driver;
+#[cfg(feature = "io-driver")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-driver")))]
+pub(crate) mod driver;
+#[cfg(feature = "io-driver")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-driver")))]
+mod poll_evented;
+#[cfg(feature = "io-driver")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-driver")))]
+pub use poll_evented::PollEvented;
+#[cfg(feature = "io-driver")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-driver")))]
+mod registration;
+#[cfg(feature = "io-driver")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-driver")))]
+pub use registration::Registration;
 
-    mod poll_evented;
-    pub use poll_evented::PollEvented;
-
-    mod registration;
-    pub use registration::Registration;
-}
-
-cfg_io_std! {
-    mod stderr;
-    pub use stderr::{stderr, Stderr};
-
-    mod stdin;
-    pub use stdin::{stdin, Stdin};
-
-    mod stdout;
-    pub use stdout::{stdout, Stdout};
-}
+#[cfg(feature = "io-std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-std")))]
+mod stderr;
+#[cfg(feature = "io-std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-std")))]
+pub use stderr::{stderr, Stderr};
+#[cfg(feature = "io-std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-std")))]
+mod stdin;
+#[cfg(feature = "io-std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-std")))]
+pub use stdin::{stdin, Stdin};
+#[cfg(feature = "io-std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-std")))]
+mod stdout;
+#[cfg(feature = "io-std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "io-std")))]
+pub use stdout::{stdout, Stdout};
 
 #[cfg(feature = "io-util")]
 #[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
@@ -218,17 +232,16 @@ pub use util::{
 #[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
 pub use std::io::{Error, ErrorKind, Result};
 
-cfg_not_io_util! {
-    cfg_process! {
-        pub(crate) mod util;
-    }
-}
+#[cfg(not(feature = "io-util"))]
+#[cfg(feature = "process")]
+#[cfg_attr(docsrs, doc(cfg(feature = "process")))]
+#[cfg(not(loom))]
+pub(crate) mod util;
 
-cfg_io_blocking! {
-    /// Types in this module can be mocked out in tests.
-    mod sys {
-        // TODO: don't rename
-        pub(crate) use crate::runtime::spawn_blocking as run;
-        pub(crate) use crate::task::JoinHandle as Blocking;
-    }
+#[cfg(any(feature = "io-std", feature = "fs"))]
+#[doc = r###"Types in this module can be mocked out in tests."###]
+mod sys {
+    // TODO: don't rename
+    pub(crate) use crate::runtime::spawn_blocking as run;
+    pub(crate) use crate::task::JoinHandle as Blocking;
 }

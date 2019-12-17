@@ -243,6 +243,7 @@ mod time;
 #[cfg(feature = "rt-threaded")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
 pub(crate) mod thread_pool;
+
 #[cfg(feature = "rt-threaded")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rt-threaded")))]
 use self::thread_pool::ThreadPool;

@@ -75,7 +75,8 @@ impl<T> Spawn<T> {
         self.task.waker_ref_count()
     }
 
-    /// Enter the task context
+    /// Enter the task context 立即执行f,不会跨线程,也不会在后台执行. 但是会将waker和self.future关联起来
+    /// 后面future有pending变成ready的时候会通知
     pub fn enter<F, R>(&mut self, f: F) -> R
     where
         F: FnOnce(&mut Context<'_>, Pin<&mut T>) -> R,

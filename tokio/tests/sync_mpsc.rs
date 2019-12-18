@@ -1,7 +1,7 @@
 #![allow(clippy::redundant_clone)]
 #![warn(rust_2018_idioms)]
 #![cfg(feature = "full")]
-
+//关于mpsc的使用,看这里就足够了.
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::error::{TryRecvError, TrySendError};
 use tokio_test::task;
@@ -227,10 +227,17 @@ fn send_recv_buffer_limited() {
         // Send second message
         assert_err!(tx.try_send(1337));
     });
-
+    //enter返回的时候函数也被执行了,是同步的
     t2.enter(|cx, _| {
         // Take the value
-        let val = assert_ready!(rx.poll_recv(cx));
+        let val = {
+            use core::task::Poll::*;
+            match (rx.poll_recv(cx)) {
+                //这里有一个读写借用
+                Ready(v) => v,
+                Pending => panic!("pending"),
+            }
+        };
         assert_eq!(Some(1), val);
     });
 
@@ -247,7 +254,13 @@ fn send_recv_buffer_limited() {
 
     t2.enter(|cx, _| {
         // Take the value
-        let val = assert_ready!(rx.poll_recv(cx));
+        let val = {
+            use core::task::Poll::*;
+            match (rx.poll_recv(cx)) {
+                Ready(v) => v,
+                Pending => panic!("pending"),
+            }
+        };
         assert_eq!(Some(2), val);
     });
 
@@ -265,12 +278,19 @@ fn recv_close_gets_none_idle() {
     rx.close();
 
     t1.enter(|cx, _| {
-        let val = assert_ready!(rx.poll_recv(cx));
+        let val = {
+            use core::task::Poll::*;
+            match (rx.poll_recv(cx)) {
+                Ready(v) => v,
+                Pending => panic!("pending"),
+            }
+        };
         assert!(val.is_none());
         assert_ready_err!(tx.poll_ready(cx));
     });
 }
-
+//为什么前一个关闭后,rx.poll_recv返回了none
+//而这个返回的是pending?
 #[test]
 fn recv_close_gets_none_reserved() {
     let mut t1 = task::spawn(());
@@ -280,13 +300,23 @@ fn recv_close_gets_none_reserved() {
     let (mut tx1, mut rx) = mpsc::channel::<i32>(1);
     let mut tx2 = tx1.clone();
 
-    assert_ready_ok!(t1.enter(|cx, _| tx1.poll_ready(cx)));
+    {
+        use tokio_test::{assert_ok, assert_ready};
+        let val = {
+            use core::task::Poll::*;
+            match (t1.enter(|cx, _| tx1.poll_ready(cx))) {
+                Ready(v) => v,
+                Pending => panic!("pending"),
+            }
+        };
+        assert_ok!(val)
+    }
 
     t2.enter(|cx, _| {
         assert_pending!(tx2.poll_ready(cx));
     });
 
-    rx.close();
+    rx.close(); //因为tx1 正在发送?所以缓冲区中的会继续处理?
 
     assert!(t2.is_woken());
 
@@ -365,11 +395,18 @@ fn drop_tx_with_permit_releases_permit() {
     assert_ready_ok!(t1.enter(|cx, _| tx1.poll_ready(cx)));
 
     t2.enter(|cx, _| {
-        assert_pending!(tx2.poll_ready(cx));
+        use core::task::Poll::*;
+        match (tx2.poll_ready(cx)) {
+            //poll_ready虽然返回了,但是在tx2的context(也就是参数cx)上注册了唤醒,然后当tx1释放以后,
+            // 会通过tx2关联的waker来执行cx上的唤醒操作
+            Pending => {}
+            Ready(v) => panic!("ready; value = {:?}", v),
+        }
+        println!("pending...");
     });
-
+    assert!(!t2.is_woken());
     drop(tx1);
-
+    //tx1释放了,所以t2是ok了,被唤醒了?
     assert!(t2.is_woken());
 
     assert_ready_ok!(t2.enter(|cx, _| tx2.poll_ready(cx)));
@@ -383,8 +420,9 @@ fn dropping_rx_closes_channel() {
 
     let msg = Arc::new(());
     assert_ok!(tx.try_send(msg.clone()));
+    assert_eq!(2, Arc::strong_count(&msg));
 
-    drop(rx);
+    drop(rx); //发送方发送的消息到了接受方那里,被丢弃了.
     assert_ready_err!(t1.enter(|cx, _| tx.poll_ready(cx)));
 
     assert_eq!(1, Arc::strong_count(&msg));

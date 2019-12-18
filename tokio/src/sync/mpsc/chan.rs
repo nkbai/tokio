@@ -97,7 +97,7 @@ pub(crate) trait Semaphore {
 
     fn close(&self);
 }
-
+//也简单,就是一个semaphore+缓冲区
 struct Chan<T, S> {
     /// Handle to the push half of the lock-free list.
     tx: list::Tx<T>,

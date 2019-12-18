@@ -22,7 +22,17 @@ fn send_recv_with_buffer() {
     let mut rx = task::spawn(rx);
 
     // Using poll_ready / try_send
-    assert_ready_ok!(tx.enter(|cx, mut tx| tx.poll_ready(cx)));
+    {
+        use tokio_test::{assert_ok, assert_ready};
+        let val = {
+            use core::task::Poll::*;
+            match (tx.enter(|cx, mut tx| tx.poll_ready(cx))) {
+                Ready(v) => v,
+                Pending => panic!("pending"),
+            }
+        };
+        assert_ok!(val)
+    }
     tx.try_send(1).unwrap();
 
     // Without poll_ready

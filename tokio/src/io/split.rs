@@ -90,7 +90,10 @@ impl<T: AsyncRead> AsyncRead for ReadHalf<T> {
         cx: &mut Context<'_>,
         buf: &mut [u8],
     ) -> Poll<io::Result<usize>> {
-        let mut inner = ready!(self.inner.poll_lock(cx));
+        let mut inner = match (self.inner.poll_lock(cx)) {
+            std::task::Poll::Ready(t) => t,
+            std::task::Poll::Pending => return std::task::Poll::Pending,
+        };
         inner.stream_pin().poll_read(cx, buf)
     }
 

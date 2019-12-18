@@ -246,9 +246,9 @@ pub mod signal;
 #[cfg(feature = "sync")]
 #[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
 pub mod sync;
-
-#[cfg(not(feature = "sync"))]
-mod sync;
+/// todo 注掉这个是因为clion代码识别有问题
+//#[cfg(not(feature = "sync"))]
+//mod sync;
 
 #[cfg(feature = "rt-core")]
 pub mod task;

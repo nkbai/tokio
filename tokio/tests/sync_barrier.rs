@@ -3,7 +3,7 @@
 #![cfg(feature = "full")]
 
 use tokio::sync::Barrier;
-
+use tokio::task::JoinHandle;
 use tokio_test::task::spawn;
 use tokio_test::{assert_pending, assert_ready};
 
@@ -20,7 +20,13 @@ fn zero_does_not_block() {
 
     {
         let mut w = spawn(b.wait());
-        let wr = assert_ready!(w.poll());
+        let wr = {
+            use core::task::Poll::*;
+            match (w.poll()) {
+                Ready(v) => v,
+                Pending => panic!("pending"),
+            }
+        };
         assert!(wr.is_leader());
     }
     {
@@ -82,7 +88,7 @@ fn lots() {
         }
 
         // pass the barrier
-        let mut w = spawn(b.wait());
+        let mut w = spawn(b.wait()); //无法确定到底哪个wait会成为leader,只能确保有一个
         let mut found_leader = assert_ready!(w.poll()).is_leader();
         for mut w in wait {
             let wr = assert_ready!(w.poll());

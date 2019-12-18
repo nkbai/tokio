@@ -8,8 +8,11 @@ use tokio_test::assert_ok;
 async fn read_until() {
     let mut buf = vec![];
     let mut rd: &[u8] = b"hello world";
-
-    let n = assert_ok!(rd.read_until(b' ', &mut buf).await);
+    use std::result::Result::*;
+    let n = match (rd.read_until(b' ', &mut buf).await) {
+        Ok(v) => v,
+        Err(e) => panic!("assertion failed: Err({:?})", e),
+    };
     assert_eq!(n, 6);
     assert_eq!(buf, b"hello ");
     buf.clear();

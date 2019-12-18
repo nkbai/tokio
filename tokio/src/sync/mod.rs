@@ -42,28 +42,28 @@ mod task;
 #[cfg(feature = "sync")]
 #[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
 pub(crate) use task::AtomicWaker;
-#[cfg(feature = "sync")]
-#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
-pub mod watch;
-
-cfg_not_sync! {
-    cfg_atomic_waker_impl! {
-        mod task;
-        pub(crate) use task::AtomicWaker;
-    }
-
-    #[cfg(any(
-            feature = "rt-core",
-            feature = "process",
-            feature = "signal"))]
-    pub(crate) mod oneshot;
-
-    cfg_signal! {
-        pub(crate) mod mpsc;
-        pub(crate) mod semaphore;
-    }
-}
+/// cfg cfg_not 导致clion混乱,目前也没法配置
+//cfg_not_sync! {
+//    cfg_atomic_waker_impl! {
+//        mod task;
+//        pub(crate) use task::AtomicWaker;
+//    }
+//
+//    #[cfg(any(
+//            feature = "rt-core",
+//            feature = "process",
+//            feature = "signal"))]
+//    pub(crate) mod oneshot;
+//
+//    cfg_signal! {
+//        pub(crate) mod mpsc;
+//        pub(crate) mod semaphore;
+//    }
+//}
 
 /// Unit tests
 #[cfg(test)]
 mod tests;
+#[cfg(feature = "sync")]
+#[cfg_attr(docsrs, doc(cfg(feature = "sync")))]
+pub mod watch;

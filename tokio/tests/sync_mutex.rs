@@ -14,8 +14,15 @@ fn straight_execution() {
     let l = Mutex::new(100);
 
     {
+        //这里的lock明显是异步的...
         let mut t = spawn(l.lock());
-        let mut g = assert_ready!(t.poll());
+        let mut g = {
+            use core::task::Poll::*;
+            match (t.poll()) {
+                Ready(v) => v,
+                Pending => panic!("pending"),
+            }
+        };
         assert_eq!(&*g, &100);
         *g = 99;
     }

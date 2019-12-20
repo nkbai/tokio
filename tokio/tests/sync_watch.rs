@@ -1,7 +1,7 @@
 #![allow(clippy::cognitive_complexity)]
 #![warn(rust_2018_idioms)]
 #![cfg(feature = "full")]
-
+/// watch是一个single producer，多个consumer的模式，类似于listener
 use tokio::sync::watch;
 use tokio_test::task::spawn;
 use tokio_test::{assert_pending, assert_ready};

@@ -18,7 +18,13 @@ fn send_recv() {
 
     assert_pending!(rx.poll());
 
-    assert_ok!(tx.send(1));
+    {
+        use std::result::Result::*;
+        match (tx.send(1)) {
+            Ok(v) => v,
+            Err(e) => panic!("assertion failed: Err({:?})", e),
+        }
+    }
 
     assert!(rx.is_woken());
 
@@ -77,6 +83,7 @@ async fn async_rx_closed() {
 
     tokio::spawn(async move {
         drop(rx);
+        go
     });
 
     tx.closed().await;

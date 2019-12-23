@@ -14,7 +14,13 @@ async fn shutdown() {
     tokio::spawn(async move {
         let mut stream = assert_ok!(TcpStream::connect(&addr).await);
 
-        assert_ok!(AsyncWriteExt::shutdown(&mut stream).await);
+        {
+            use std::result::Result::*;
+            match (AsyncWriteExt::shutdown(&mut stream).await) {
+                Ok(v) => v,
+                Err(e) => panic!("assertion failed: Err({:?})", e),
+            }
+        }
 
         let mut buf = [0; 1];
         let n = assert_ok!(stream.read(&mut buf).await);

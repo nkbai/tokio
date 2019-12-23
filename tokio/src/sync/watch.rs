@@ -123,7 +123,7 @@ pub mod error {
 #[derive(Debug)]
 struct Shared<T> {
     /// The most recent value
-    value: RwLock<T>,
+    value: RwLock<T>, //这里的T毫无疑问是要支持clone的,每个receiver都要有一份
 
     /// The current version
     ///
@@ -236,7 +236,7 @@ impl<T> Receiver<T> {
     pub fn poll_recv_ref<'a>(&'a mut self, cx: &mut Context<'_>) -> Poll<Option<Ref<'a, T>>> {
         // Make sure the task is up to date
         self.inner.waker.register_by_ref(cx.waker());
-
+        //如果version一样,就避免了加锁的成本
         let state = self.shared.version.load(SeqCst);
         let version = state & !CLOSED;
 
@@ -255,12 +255,15 @@ impl<T> Receiver<T> {
         Pending
     }
 }
-
+//只有实现了Clone,才能使用recv
 impl<T: Clone> Receiver<T> {
     /// Attempts to clone the latest value sent via the channel.
     pub async fn recv(&mut self) -> Option<T> {
         poll_fn(|cx| {
-            let v_ref = ready!(self.poll_recv_ref(cx));
+            let v_ref = match self.poll_recv_ref(cx) {
+                std::task::Poll::Ready(t) => t,
+                std::task::Poll::Pending => return std::task::Poll::Pending,
+            };
             Poll::Ready(v_ref.map(|v_ref| (*v_ref).clone()))
         })
         .await
@@ -270,7 +273,7 @@ impl<T: Clone> Receiver<T> {
 #[cfg(feature = "stream")]
 impl<T: Clone> futures_core::Stream for Receiver<T> {
     type Item = T;
-
+    //recv的同步版本
     fn poll_next(mut self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<T>> {
         let v_ref = ready!(self.poll_recv_ref(cx));
 
@@ -338,7 +341,7 @@ impl<T> Sender<T> {
         shared.version.fetch_add(2, SeqCst);
 
         // Notify all watchers
-        notify_all(&*shared);
+        notify_all(&*shared); //唤醒等待者
 
         // Return the old value
         Ok(())

@@ -3,6 +3,7 @@
 #[cfg(feature = "io-util")]
 #[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
 mod async_buf_read_ext;
+
 #[cfg(feature = "io-util")]
 #[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
 pub use async_buf_read_ext::AsyncBufReadExt;
@@ -86,9 +87,11 @@ mod read_line;
 mod read_to_end;
 #[cfg(feature = "io-util")]
 #[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
-cfg_process! {
-    pub(crate) use read_to_end::read_to_end;
-}
+#[cfg(feature = "process")]
+#[cfg_attr(docsrs, doc(cfg(feature = "process")))]
+#[cfg(not(loom))]
+pub(crate) use read_to_end::read_to_end;
+
 #[cfg(feature = "io-util")]
 #[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
 mod read_to_string;
@@ -140,10 +143,10 @@ mod write_int;
 #[cfg_attr(docsrs, doc(cfg(feature = "io-util")))]
 const DEFAULT_BUF_SIZE: usize = 8 * 1024;
 
-cfg_not_io_util! {
-    cfg_process! {
-        mod read_to_end;
-        // Used by process
-        pub(crate) use read_to_end::read_to_end;
-    }
-}
+//cfg_not_io_util! {
+//    cfg_process! {
+//        mod read_to_end;
+//        // Used by process
+//        pub(crate) use read_to_end::read_to_end;
+//    }
+//}

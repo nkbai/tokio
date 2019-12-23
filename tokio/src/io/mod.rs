@@ -154,9 +154,8 @@
 //! [`Result`]: type.Result.html
 //! [`Read`]: std::io::Read
 //! [`Write`]: std::io::Write
-cfg_io_blocking! {
-    pub(crate) mod blocking;
-}
+#[cfg(any(feature = "io-std", feature = "fs"))]
+pub(crate) mod blocking;
 
 mod async_buf_read;
 pub use self::async_buf_read::AsyncBufRead;

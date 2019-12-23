@@ -28,7 +28,7 @@ fn single_rx_recv() {
         let v = assert_ready!(t.poll()).unwrap();
         assert_eq!(v, "two");
     }
-
+    //如果发送放关闭，接收方立即ready，然后内容为空
     {
         let mut t = spawn(rx.recv());
 
@@ -45,7 +45,7 @@ fn single_rx_recv() {
 fn multi_rx() {
     let (tx, mut rx1) = watch::channel("one");
     let mut rx2 = rx1.clone();
-
+    //一个发送方，多个接收方
     {
         let mut t1 = spawn(rx1.recv());
         let mut t2 = spawn(rx2.recv());
@@ -133,6 +133,7 @@ fn rx_observes_final_value() {
     drop(tx);
 
     {
+        //初始值是收听得到的，关闭后的第一个接收，能收到。
         let mut t1 = spawn(rx.recv());
         let res = assert_ready!(t1.poll());
         assert_eq!(res.unwrap(), "one");
@@ -151,8 +152,14 @@ fn rx_observes_final_value() {
     tx.broadcast("two").unwrap();
 
     {
-        let mut t1 = spawn(rx.recv());
+        //只能接收到到最后一次值？
+        let mut rx2 = rx.clone();
+        let mut t1 = spawn(rx2.recv());
         let res = assert_ready!(t1.poll());
+        assert_eq!(res.unwrap(), "two");
+        //启动以后会接收到最后一次的值
+        let mut t2 = spawn(rx.recv());
+        let res = assert_ready!(t2.poll());
         assert_eq!(res.unwrap(), "two");
     }
 
